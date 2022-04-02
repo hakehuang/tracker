@@ -4,6 +4,8 @@
 import math
 
 import logging
+from anytree import Node, RenderTree
+from anytree.exporter import DotExporter
 
 
 INFECTION_PAIR = []
@@ -101,8 +103,29 @@ def infection(p_a, p_b, **params):
 
     return is_infected
 
-def convert_pair_to_tree(i_list):
+def convert_pair_to_tree():
     '''
         convert_pari_to_tree
     '''
-    pass
+    a_tree = Node("root")
+    single_dict = {}
+    for _i in INFECTION_PAIR:
+        if str(_i[0]) not in single_dict:
+            single_dict[str(_i[0])] = Node(str(_i[0]))
+        if str(_i[1]) not in single_dict:
+            single_dict[str(_i[1])] = Node(str(_i[1]))
+
+    logging.info(single_dict)
+
+    for _i in INFECTION_PAIR:
+        single_dict[str(_i[1])].parent = single_dict[str(_i[0])]
+
+
+    for _n, _v in single_dict.items():
+        if _v.parent is None:
+            try:
+                DotExporter(_v).to_picture("parient_{}.png".format(_n))
+            except FileNotFoundError:
+                logging.info("please install graphz excutable")
+                for pre, _fill, node in RenderTree(_v):
+                    print("%s%s" % (pre, node.name))

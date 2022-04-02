@@ -117,7 +117,7 @@ if __name__ == "__main__":
     _m0 = folium.Map(location=PEOPLE_SQUARE, zoom_start=20)
     place_peoples(_m0, _ps)
     _m0.save("index_ori.html")
-    loops = 6000
+    loops = 5000
     for i in range(loops):
         # assume 500 steps is a day
         _is_day = False
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     logging.info("alt {} people currently illed".format(_p_c))
     logging.info("alt {} people get infected".format(_p_i))
-
+    convert_pair_to_tree()
     _m = folium.Map(location=PEOPLE_SQUARE, zoom_start=20)
     place_peoples(_m, _ps)
     _m.save("index.html")
