@@ -33,8 +33,10 @@ class People:
         self._cury = params.get("cury", self.POSITION[1])
 
         # features
-        self.infected_period = params.get("infected_period", 0)
+        # self.infected_period = params.get("infected_period", 0)
         self.disease_list = {}
+        self.immunity_list = {}
+        self.infected_diseases = []
 
         # herd features
         self.turn_over_rate = params.get("turn_over_rate", 50) # 50%
@@ -43,23 +45,72 @@ class People:
         self.uhc = params.get("uhc", False) # with underlaying heal condition
 
 
-    def time_pass(self):
+    def time_pass(self, is_day=False):
         '''
             time pass
             attributes that need changed over period day
         '''
-        if self._status == self.PEOPLE_STATUS[1]:
-            self.infected_period += 1
+        if is_day:
+
+            #update immunity
+            imu_list = self.get_immunity()
+            for _d in list(imu_list):
+                _v  = imu_list[_d]
+                if _v["imimmunity_period"] > 0:
+                    _v["imimmunity_period"] -= 1
+                else:
+                    imu_list.pop(_d)
+
+            # update disease
+            if self._status == self.PEOPLE_STATUS[1]:
+                _diseases = self.get_diseases()
+                for _d in list(_diseases):
+                    _v = _diseases[_d]
+                    if _v.recv_time > 0:
+                        _v.recv_time -= 1
+                    else:
+                        logging.info("{} recoverred".format(self.id))
+                        self.add_disease_to_immunity_list(_d,
+                                _v.immunity_period)
+                        _diseases.pop(_d)
+
+
+                _diseases = self.get_diseases()
+                if not _diseases:
+                    self._status = self.PEOPLE_STATUS[0]
+
 
         _turn_over = random.randint(0,100)
         if _turn_over < self.turn_over_rate:
             self.step_next_pos()
+
+    def add_disease_to_immunity_list(self, disease_name,
+            immunity_period=180):
+        '''
+            set_immunity_list
+            Params:
+                disease_name: disease name
+                immunity_period: immuntiy period default 180 days
+            Return:
+                NA
+        '''
+        if disease_name not in self.immunity_list:
+            params = {
+                "imimmunity_period" : immunity_period
+            }
+            self.immunity_list[disease_name] = params
 
     def get_diseases(self):
         '''
             get_diseases
         '''
         return self.disease_list
+
+    def get_immunity(self):
+        '''
+            get_immunity
+        '''
+        return self.immunity_list
 
     @property
     def is_infected(self):
@@ -90,6 +141,13 @@ class People:
             status
         '''
         return self._id
+
+    @property
+    def infected_history(self):
+        '''
+            return array
+        '''
+        return self.infected_diseases
 
 
     @property
@@ -158,14 +216,16 @@ class People:
         if disease is None:
             return
 
-        if disease.__class__.__name__ in self.disease_list:
+        _dn = disease.__class__.__name__
+        if _dn in self.disease_list:
             logging.info("already infected")
             return
 
-        self.disease_list[disease.__class__.__name__] = copy.deepcopy(disease)
-        self.infected_period = 1
+        self.disease_list[_dn] = copy.deepcopy(disease)
         self._status = self.PEOPLE_STATUS[1]
         disease.r0 -= 1
+
+        self.infected_diseases.insert(-1, {_dn})
 
 
 if __name__ == "__main__":

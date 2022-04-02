@@ -21,6 +21,7 @@ def create_people_with_disease(id_start):
     _p = people.People(**params)
     _d = disease.Disease()
     _p.infected_by_disease(_d)
+    logging.info("recv time init is {}".format(_d.recv_time))
     return _p
 
 # create n of people at random position in given region
@@ -70,8 +71,6 @@ def cal_pos(n, p, rect, start_point):
         del plist[d]
         i -= 1
 
-    logging.info(final_list_p)
-
     for i in final_list_p:
         _ix = to_latitude(i % x_len)
         _iy = to_longtitude(i / x_len)
@@ -109,7 +108,7 @@ def place_peoples(m, peoples):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(filename)s:%(lineno)d] %(threadName)s %(message)s')
-    _ps = cal_pos(9, 1, [50, 50], PEOPLE_SQUARE)
+    _ps = cal_pos(9, 1, [20, 20], PEOPLE_SQUARE)
     for _p in _ps:
         logging.info("==============")
         logging.info("\tid is {}".format(_p.id))
@@ -118,21 +117,40 @@ if __name__ == "__main__":
     _m0 = folium.Map(location=PEOPLE_SQUARE, zoom_start=20)
     place_peoples(_m0, _ps)
     _m0.save("index_ori.html")
-    loops = 1000
+    loops = 6000
     for i in range(loops):
+        # assume 500 steps is a day
+        _is_day = False
+        if i > 500 and i% 500 == 0:
+            logging.info("day {}".format(i/500))
+            _is_day = True
         for _p in _ps:
-            _p.time_pass()
+            if _is_day:
+                _p.time_pass(True)
+            else:
+                _p.time_pass()
         for _pa in _ps:
             for _pb in _ps:
-                infection(_pa, _pb)
+                _ret = infection(_pa, _pb)
+                if _ret:
+                    logging.info("step: {}".format(i))
     _p_c = 0
+    _p_i = 0
     for _p in _ps:
         logging.info("==============")
         logging.info("\tid is {}".format(_p.id))
         logging.info("\t status is {}".format(_p.status))
+        _des = _p.get_diseases()
+        for _d, _v in _des.items():
+            logging.info("\t recv time is {}".format(_v.recv_time))
         if _p.is_infected:
             _p_c += 1
-    logging.info("alt {} people get infected".format(_p_c))
+        if len(_p.infected_history) > 0:
+            _p_i += 1
+
+    logging.info("alt {} people currently illed".format(_p_c))
+    logging.info("alt {} people get infected".format(_p_i))
+
     _m = folium.Map(location=PEOPLE_SQUARE, zoom_start=20)
     place_peoples(_m, _ps)
     _m.save("index.html")
