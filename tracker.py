@@ -28,6 +28,11 @@ def create_people_with_disease(id_start):
 def cal_pos(n, p, rect, start_point):
     '''
         cal pos for n in region
+        Params:
+            n: number of victims
+            p: number of illness
+            rect (width, length): put all people in this rect
+            start_point (latitude, longtitude): the location to start
     '''
     peoples = []
     plist = []
