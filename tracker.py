@@ -113,7 +113,7 @@ def place_peoples(m, peoples):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(filename)s:%(lineno)d] %(threadName)s %(message)s')
-    _ps = cal_pos(9, 1, [20, 20], PEOPLE_SQUARE)
+    _ps = cal_pos(89, 1, [30, 100], PEOPLE_SQUARE)
     for _p in _ps:
         logging.info("==============")
         logging.info("\tid is {}".format(_p.id))
